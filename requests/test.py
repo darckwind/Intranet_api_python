@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import pandas as pd
 
 login = "https://intranet.ufro.cl/autentifica.php"
 
@@ -35,7 +36,7 @@ responce_notas = session.request('GET', notas)
 parce_asignaturas = BeautifulSoup(responce_notas.content,'html.parser')
 tablas = parce_asignaturas.findAll("table", {"class": "TablaEstandar"})
 
-td =  tablas[0].findAll("td")
+td = tablas[0].findAll("td")
 
 general = {}
 codigo =""
@@ -83,24 +84,48 @@ general['deudas']=deudas
 response__horario = session.request('GET', horario)
 table_hor = BeautifulSoup(response__horario.content,'html.parser')
 table_hor = table_hor.findAll("table", {"class": "Normal"})
+table = table_hor[1]
 
-data_horario = {}
-data = {}
-periodo = ""
-count=0
+n_columns = 0
+n_rows = 0
+column_names = []
 
-#print(table_hor[1].find_all('td'))
-for hor in table_hor[1].find_all('td'):
-    if hor.get_text().startswith('Alm') or hor.get_text().startswith(('0', '1', '2', '3', '4', '5', '6', '7', '8', '9')):
-        periodo = hor.get_text()
-    else:
-        data[count] = hor.get_text()
-        count +=1
-        if count > 6:
-            count = 0
-    data_horario[periodo] = data
+# Find number of rows and columns
+# we also find the column titles if we can
+for row in table.find_all('tr'):
+
+    # Determine the number of rows in the table
+    td_tags = row.find_all('td')
+    if len(td_tags) > 0:
+        n_rows += 1
+        if n_columns == 0:
+            # Set the number of columns for our table
+            n_columns = len(td_tags)
+
+    # Handle column names if we find them
+    th_tags = row.find_all('th')
+    if len(th_tags) > 0 and len(column_names) == 0:
+        for th in th_tags:
+            column_names.append(th.get_text())
+
+# Safeguard on Column Titles
+if len(column_names) > 0 and len(column_names) != n_columns:
+    raise Exception("Column titles do not match the number of columns")
+
+columns = column_names if len(column_names) > 0 else range(0, n_columns)
+df = pd.DataFrame(columns=columns,
+                  index=range(0, n_rows))
+row_marker = 0
+for row in table.find_all('tr'):
+    column_marker = 0
+    columns = row.find_all('td')
+    for column in columns:
+        df.iat[row_marker, column_marker] = column.get_text()
+        column_marker += 1
+    if len(columns) > 0:
+        row_marker += 1
 
 
-general['horario']=data_horario
+general['horario']=df.to_json()
 
 print(json.dumps(general,indent=4))
