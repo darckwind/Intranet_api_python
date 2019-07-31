@@ -11,8 +11,8 @@ deudas = "https://intranet.ufro.cl/alumno/ver_deudas.php"
 
 horario ="https://intranet.ufro.cl/alumno/ver_horario.php"
 
-rut ="***********"
-password="***********"
+rut ="*********"
+password="********"
 
 
 session =requests.Session()
@@ -124,8 +124,8 @@ for row in table.find_all('tr'):
         column_marker += 1
     if len(columns) > 0:
         row_marker += 1
+print(df.to_dict())
 
-
-general['horario']=df.to_json()
+general['horario']=json.dumps(df.to_dict())
 
 print(json.dumps(general,indent=4))
