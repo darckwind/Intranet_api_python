@@ -5,20 +5,10 @@ import pandas as pd
 
 
 class Requesteo():
-    rut =""
-    password =""
-
-    def contructor(self, run, passwo):
-        global rut,password
-        rut = run
-        password = passwo
-
-        print(rut,password)
-
-    @staticmethod
-    def recover():
 
 
+    def recover(self, run, passwo):
+        #urls
         login = "https://intranet.ufro.cl/autentifica.php"
 
         notas ="https://intranet.ufro.cl/alumno/notas/ver_notas_sem.php"
@@ -27,14 +17,11 @@ class Requesteo():
 
         horario ="https://intranet.ufro.cl/alumno/ver_horario.php"
 
-
-
-
         session =requests.Session()
 
         payload_login = "------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; " \
-                        "name=\"Formulario[POPUSERNAME]\"\r\n\r\n"+rut+"\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: " \
-                        "form-data; name=\"Formulario[XYZ]\"\r\n\r\n"+password+"\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--"
+                        "name=\"Formulario[POPUSERNAME]\"\r\n\r\n"+run+"\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: " \
+                        "form-data; name=\"Formulario[XYZ]\"\r\n\r\n"+passwo+"\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--"
 
         headers = {'content-type': "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW"}
 
@@ -48,7 +35,6 @@ class Requesteo():
 
         parce_asignaturas = BeautifulSoup(responce_notas.content,'html.parser')
         tablas = parce_asignaturas.findAll("table", {"class": "TablaEstandar"})
-
         td = tablas[0].findAll("td")
 
         general = {}
@@ -137,8 +123,6 @@ class Requesteo():
                 column_marker += 1
             if len(columns) > 0:
                 row_marker += 1
-        #print(df.to_dict())
-
         general['horario']=df.to_dict()
 
         return general
